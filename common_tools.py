@@ -4,6 +4,19 @@ import secrets
 import string
 from datetime import datetime,timedelta
 
+def universal_input_handler(prompt_message, validation_funcion, error_msg, max_attempts=3):
+        for attempt in range(1, max_attempts + 1):
+            try:
+                user_data = input(f"\n{prompt_message} (Attempt {attempt}/{max_attempts}): ").strip()
+                if validation_funcion(user_data):
+                    return user_data
+                else:
+                    print(f"{error_msg}")
+            except Exception as e:
+                print(f"Error: {e}")
+        
+        return None
+
 def generate_otp():
     length=6
     digits = string.digits
@@ -16,44 +29,111 @@ def validate_otp(otp,customer_otp):
     else:
         return False
     
-def universal_input_handler(prompt_message, validation_funcion, error_msg, max_attempts=3):
-        for attempt in range(1, max_attempts + 1):
-            try:
-                user_data = input(f"\n{prompt_message} (Attempt {attempt}/{max_attempts}): ").strip()
-                if validation_funcion(user_data):
-                    return user_data
-                else:
-                    print(f"{error_msg}")
-            except Exception as e:
-                print(f"Error: {e}")
-        
-        return None    
-
+def authorize_user():
+        otp=generate_otp()
+        print(f"your otp {otp} ")
+        def otp_validate(user_otp):
+            return validate_otp(otp,user_otp)
+        user_otp=universal_input_handler(
+                "enter otp :",
+                otp_validate,
+                "Invalid otp"
+                                        )
+        if user_otp:
+            return True
+        else:
+            print("payment verification failed")
+            return False     
+    
 def gender(gender):
-    if gender==1:
+    if gender=="1":
         gender="male"
-    elif gender==2:
+        return gender
+    elif gender=="2":
         gender="female"
-    elif gender==3:
+        return gender
+    elif gender=="3":
         gender="shemale(others)"
-    else:return False 
-    return gender
-
-def calculate_age(dob):
-    dob=datetime.strptime(dob,"%Y-%m-%d").date() 
-    today=datetime.today().date()
-
-    age=today.year-dob.year
-
-    if(today.month,today.day)<(dob.month,dob.day):
-        age-=1
-    return age 
-
-def validate_mobile_number(mobile_number):    
-    if len(mobile_number)==10:
-        return mobile_number
+        return gender
     else:
         return False
+
+def authorize_gender():
+    user_gender=universal_input_handler(
+        "your gender :".strip(),
+        gender,
+        "invalid gender option"
+    )      
+    if user_gender:
+        user_gender=gender(user_gender)
+        return user_gender
+    else:
+        return False 
+
+def calculate_age(dob):
+        dob=str(dob)
+
+        if dob!="" and len(dob)==10: 
+        
+            if dob[4] == "-": 
+                dob_str= dob
+            else:
+                dob_str=date_db_format(dob)
+            if dob:
+                dob_obj=datetime.strptime(dob_str,"%Y-%m-%d").date() 
+                today=datetime.today().date()
+
+
+                if dob_obj > today:
+                    return False
+
+                age=today.year-dob_obj.year
+
+                if(today.month,today.day)<(dob_obj.month,dob_obj.day):
+                    age-=1
+
+                if age > 150:
+                    return False
+                #print("calculate_age :",age)
+                return age
+            else :
+                return False
+        
+def date_db_format(date_str):
+    # DD-MM-YYYY to YYYY-MM-DD
+    return "-".join(date_str.split("-")[::-1])
+
+def dob_validation():
+    dob=universal_input_handler(
+        "enter your date of birth (DD-MM-YYYY) :".strip(),
+        calculate_age,
+        "enter valid date of birth"
+    )
+    if dob:
+        dob=date_db_format(dob)
+        print("universal_input_handler: ",dob)
+        return dob
+
+def validate_mobile_number(mobile_number): 
+    if mobile_number.isdigit():   
+        if len(mobile_number)==10:
+            return mobile_number
+        else:
+            return False
+    else:
+        return False  
+
+def authorize_mobile_number():
+    user_moblie_number=universal_input_handler(
+                "enter mobile_number :".strip(),
+                validate_mobile_number,
+                "Invalid mobile number "
+                                        )
+    if user_moblie_number:
+        return user_moblie_number
+    else:
+        print("enter valid mobile number")
+        return False       
 
 def validate_upi(upi_id):
     upi_id = upi_id.lower().strip()
@@ -201,22 +281,6 @@ def select_payment_method(price):
             return  False
     return False
     
-def authorize_user():
-        otp=generate_otp()
-        print(f"your otp {otp} ")
-        def otp_validate(user_otp):
-            return validate_otp(otp,user_otp)
-        user_otp=universal_input_handler(
-                "enter otp :",
-                otp_validate,
-                "Invalid otp"
-                                        )
-        if user_otp:
-            return True
-        else:
-            print("payment verification failed")
-            return False    
-
 class Ajith_Kumar_National_Bank:
     user_name ="ajithkumarm"
     balance = 100000
@@ -248,4 +312,35 @@ def valide_date_time(departure_date, departure_time):
         return flight_timestamp > now
     except:
         return False 
+    
+def name_validation(name):
+    if name!="" and name.replace(" ","").isalpha():
+        return name
+    else:
+        return False
+
+def user_name_validation():
+    user_name=universal_input_handler(
+        "Full name :".strip(),
+        name_validation,
+        "Full name not be a empty space or contain number"
+                    )    
+    if user_name:
+        return user_name
+    else:
+        return False
+    
+def validate_email_id():
+    pass
+
+def validate_email_id_input():
+    email_id=universal_input_handler(
+        "enter your email id :",
+        validate_email_id,
+        "invalid email id"
+    )
+    if email_id:
+        return email_id
+    
+#user_name_validation()    
       

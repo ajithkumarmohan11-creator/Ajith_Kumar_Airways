@@ -56,7 +56,6 @@ def check_flight_availablity(db,**kwargs):
                 seats=f"{clas_name}_seats"
                 price=f"{clas_name}_seat_price"
                 print(f"{clas_namee:<15} : {flight[seats]:<5} {flight[price]}")   
-
 class ticket_booking_manager:
     def __init__(self, database_manager):
         self.dbm = database_manager

@@ -18,50 +18,59 @@ print("' Wings for your Dreams, Wheels for your Journey! '" .center(width))
 
 while True:
     print("enter  as \n1.passanger\n2.admin\n3.exit ")
-    choice=int(input("your choice :"))
+    choice=input("your choice :").strip()
 
-    if choice==3:
+    if choice=="3":
         break
 
-    elif choice==1:
-        mobile_number=input("mobile number :").strip()
-        mobile_number=common.validate_mobile_number(mobile_number)
-
+    elif choice=="1":
+        mobile_number=common.authorize_mobile_number()
         if mobile_number:
+            print(mobile_number)
             otp=common.authorize_user()
             if otp:
                 already_exist=customer.authentication_customer(db,mobile_number)
                 if already_exist:
                     full_name=already_exist["full_name"]
-                    print(f"welcome {full_name} ")
+                    dob=already_exist["date_of_birth"]
+                    age=common.calculate_age(dob)
+                    print(f"welcome {full_name} Age :{age} ")
                 else:
-                    user_gender=int(input("gender\n1.male\n2.female\n3.shemale(others) :"))
-                    gender=common.gender(user_gender)
+                    print("gender\n1.male\n2.female\n3.shemale(others)")
+                    gender=common.authorize_gender()
                     if gender:
                         user_gender=gender
-                    full_name=input(" full Name :").strip()
-                    dob=input("date of birth(YYYY-MM-DD) :")
-                    age=common.calculate_age(dob)
-                    details={"mobile_number":mobile_number,"full_name":full_name,"gender":user_gender,"date_of_birth":dob}
-                    customer.customer_details(db,details)
+                        full_name=common.user_name_validation()
+                        if full_name:
+                            print(full_name)
+                            dob=common.dob_validation()
+                            print(dob)
+                            if dob:
+                                age=common.calculate_age(dob)
+                                print("main: ",age)
+                                #email_id=email_id_validate()
+                                details={"mobile_number":mobile_number,"full_name":full_name,"gender":user_gender,"age":age,"date_of_birth":dob}
+                                customer.customer_details(db,details)
+                    else:
+                        pass    
                           
                 while True:
                     print("1.check availablity\n2.Book ticket\n3.status checking\n4.cancel ticket\n5.exit")
-                    passenger_choice=int(input("choice :"))
+                    passenger_choice=(input("choice :"))
 
-                    if passenger_choice==5:
+                    if passenger_choice=="5":
                         print("thank you for your visit")
                         break 
 
-                    elif passenger_choice==1:
+                    elif passenger_choice=="1":
                         search_values={
                         "origine":input("origine :").strip(),
                         "destination":input("destination :").strip(),
-                        "departure_date":input("departure_date YYYY-MM_DD :").strip()
+                        "departure_date":"-".join(input("Departure Date (DD-MM-YYYY): ").strip().split("-")[::-1])
                             }
                         customer.check_flight_availablity(db,**search_values)
 
-                    elif passenger_choice==2:
+                    elif passenger_choice=="2":
                         booking_values={
                         "flight_id":int(input("flight id :")),
                         "class_type":input("class (economy/premium economy,business/first class) :").strip().lower().replace(" ","_"),
@@ -70,11 +79,11 @@ while True:
                         booking_initiat=customer.ticket_booking_manager(db)
                         result=booking_initiat.initiate_booking(db,mobile_number,**booking_values)
 
-                    elif passenger_choice==3:
+                    elif passenger_choice=="3":
                         user_pnr_no=input("enter your Pnr NO to proceed status check :").strip()
                         customer.status_checking(db,user_pnr_no) 
 
-                    elif passenger_choice==4:
+                    elif passenger_choice=="4":
                         user_pnr_no=input("enter your Pnr NO to proceed to cancel :").strip()
                         refund=customer.cancel_ticket(db,user_pnr_no) 
                         if refund:
@@ -88,19 +97,21 @@ while True:
                         print("invalide choice")
                         continue 
             else:
-                print("user validation faild")             
+                print("user validation faild") 
+        else:
+            print("enter a valid number")                    
 
-    elif choice==2:
-        user_id=input("enter your user id :")
-        user_password=input("enter your password :")
+    elif choice=="2":
+        user_id=input("enter your user id :").strip()
+        user_password=input("enter your password :").strip()
         if admin.authentication_admin(user_id,user_password):
             print(f"welcome {user_id} ")
             while True:
                 print("enter your choice of operations")
-                choice_for_operations=int(input("1.connect to database\n2.create database\n3.create table\n4.flight automation\n5.exit:"))
-                if choice_for_operations==5:
+                choice_for_operations=(input("1.connect to database\n2.create database\n3.create table\n4.flight automation\n5.exit:"))
+                if choice_for_operations=="5":
                     break
-                elif choice_for_operations==1:
+                elif choice_for_operations=="1":
                     host=input("enter host (eg=>local host) :")
                     user=input("enter user(eg=>root) :")
                     password=input("enter password :")
@@ -108,13 +119,13 @@ while True:
                     db_connect_details={"user":user,"host":host,"password":password}
                     db=admin.admin_operations(db,choice_for_operations,db_connect_details)
 
-                elif choice_for_operations==2:
+                elif choice_for_operations=="2":
                     database_name=input("database name :")
 
                     database_name={"database_name":database_name}
                     db=admin.admin_operations(db,choice_for_operations,**database_name) 
 
-                elif choice_for_operations==3:
+                elif choice_for_operations=="3":
                     current_database=admin.admin_operations(db,choice_for_operations,database_name=True)
                     print(f"current database :{current_database}  ")
 
@@ -139,7 +150,7 @@ while True:
                                               }
                     db=admin.admin_operations(db,choice_for_operations,**table_name_columns_datatype) 
 
-                elif choice_for_operations==4:
+                elif choice_for_operations=="4":
                     flight_no = input("Flight No: ")
                     origine = input("Origine: ")
                     destination = input("Destination: ")
@@ -157,6 +168,8 @@ while True:
 
         else:
             print("invalid user_id/admin")
+    else:
+        print(" Invalid choice ")        
 
 
 

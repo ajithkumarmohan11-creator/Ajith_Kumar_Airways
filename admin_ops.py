@@ -13,25 +13,27 @@ def authentication_admin(user_id,user_password):
     return False
 
 def admin_operations(db,choice_for_operations,db_connect_details=None,**kwargs):
-    if choice_for_operations!=1:
+    if choice_for_operations!="1":
         with open("db_connect_details.json","r") as f:
             db_connect_details=json.load(f)
 
-    if choice_for_operations==3 and kwargs.get("database_name")==True:
+    if choice_for_operations=="3" and kwargs.get("database_name")==True:
         result=db.read_data_from_database(optional_column="database() as current_db",mode="one")
         return result["current_db"] if result else "Not selected"
 
-    if choice_for_operations==1:
+    if choice_for_operations=="1":
         db=dbm(**db_connect_details) 
         with open("db_connect_details.json","w") as f:
             json.dump(db_connect_details,f,indent=4)
             print(f"{db_connect_details} saved")
             return db
         
-    elif choice_for_operations==2:
+    elif choice_for_operations=="2":
         database_name=kwargs.get("database_name")
         if database_name:
             db.create_database(database_name)
+
+            db_connect_details["database"]=database_name
 
             with open("db_connect_details.json","w") as f:
                 json.dump(db_connect_details,f,indent=4)
@@ -40,7 +42,7 @@ def admin_operations(db,choice_for_operations,db_connect_details=None,**kwargs):
             print("database name missing")
         return db
       
-    elif choice_for_operations==3:
+    elif choice_for_operations=="3":
         table_name=kwargs.get("table_name")
         columns_datatype=kwargs.get("columns")
 
@@ -52,7 +54,7 @@ def admin_operations(db,choice_for_operations,db_connect_details=None,**kwargs):
             print("table name or column details missing")  
         return db 
        
-    elif choice_for_operations==4:
+    elif choice_for_operations=="4":
         flight=flight_automation.flight_details(db)
         class_order = ["economy", "premium_economy", "business", "first_class"]
         seat_ratio = {"economy": 0.4, "premium_economy": 0.3, "business": 0.2, "first_class": 0.1}
