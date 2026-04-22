@@ -18,8 +18,6 @@ class database_manager:
             print("connect with Mysql success")  
 
     def write_into_database(self,query,values=None):
-        print(query)
-        print(values)
         self.cursor.execute(query,values or ())
         self.conn.commit()    
     
@@ -83,14 +81,10 @@ class database_manager:
             return    
         
         no_columns=", ".join(columns)
-        print(no_columns)
-        no_values=", ".join(["%s" for _ in columns])
-        print(no_values)
+        no_values=", ".join((["%s"])*len(columns))
 
         query=f"insert into {table_name} ({no_columns}) values ({no_values})"
-        print(query)
         values=values
-        print(values)
         self.write_into_database(query,values)
         
     def  update_large_quantity_data_list_tuple(self,table_name,columns,values,condition_columns,condition_values):
