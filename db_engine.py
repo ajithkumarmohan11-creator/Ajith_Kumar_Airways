@@ -1,9 +1,6 @@
 print("data base manager ")
 
 import mysql.connector
-import json
-import os
-from datetime import timedelta,datetime
 
 class database_manager:
     def __init__(self,host,user,password,database=None):
@@ -54,7 +51,7 @@ class database_manager:
     def column_rename(self,table_name,old_name,new_name):
         query=f" alter table {table_name} rename column {old_name} to {new_name}"
         self.write_into_database(query)
-        #print(f"column name {old_name} to {new_name} changed in {table_name}")
+        #print(f"column name {old_name} to {new_name} changed in {table_name}") 
       
     def column_data_type_modify(self,table_name,column_name,old_data_type,new_data_type):
         query = f"alter table {table_name} modify {column_name} {new_data_type}" 
