@@ -3,6 +3,8 @@ print("common tools")
 import secrets
 import string
 from datetime import datetime,timedelta
+import msvcrt
+import os
 
 def universal_input_handler(prompt_message, validation_funcion, error_msg, max_attempts=3):
         for attempt in range(1, max_attempts + 1):
@@ -42,7 +44,6 @@ def authorize_user():
         if user_otp:
             return True
         else:
-            print("payment verification failed")
             return False     
     
 def gender(gender):
@@ -59,14 +60,15 @@ def gender(gender):
         return False
 
 def authorize_gender():
+    print("gender\n1.male\n2.female\n3.shemale(others)")
     user_gender=universal_input_handler(
         "your gender :".strip(),
         gender,
         "invalid gender option"
     )      
     if user_gender:
-        user_gender=gender(user_gender)
-        return user_gender
+        gender=gender(user_gender)
+        return gender
     else:
         return False 
 
@@ -103,6 +105,13 @@ def date_db_format(date_str):
     # DD-MM-YYYY to YYYY-MM-DD
     return "-".join(date_str.split("-")[::-1])
 
+def date_is_future(date_str):
+    try:
+        input_date = datetime.strptime(date_str, "%d-%m-%Y").date()
+        return input_date >= datetime.now().date()
+    except ValueError:
+        return False
+
 def dob_validation():
     dob=universal_input_handler(
         "enter your date of birth (DD-MM-YYYY) :".strip(),
@@ -111,7 +120,6 @@ def dob_validation():
     )
     if dob:
         dob=date_db_format(dob)
-        print("universal_input_handler: ",dob)
         return dob
 
 def validate_mobile_number(mobile_number): 
@@ -125,7 +133,7 @@ def validate_mobile_number(mobile_number):
 
 def authorize_mobile_number():
     user_moblie_number=universal_input_handler(
-                "enter mobile_number :".strip(),
+                "enter mobile_number (10 digits-india) :".strip(),
                 validate_mobile_number,
                 "Invalid mobile number "
                                         )
@@ -321,7 +329,7 @@ def name_validation(name):
 
 def user_name_validation():
     user_name=universal_input_handler(
-        "Full name :".strip(),
+        "Full name (as per your id proof) :".strip(),
         name_validation,
         "Full name not be a empty space or contain number"
                     )    
@@ -330,17 +338,66 @@ def user_name_validation():
     else:
         return False
     
-def validate_email_id():
+def email_id_validate(email):
+    import re
+    email_pattern = r'^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$'
+    if re.match(email_pattern, email):
+        return True
+    return False
+
     pass
 
-def validate_email_id_input():
+def email_id_validate_input():
     email_id=universal_input_handler(
-        "enter your email id :",
-        validate_email_id,
+        "enter your email id :".lower().strip(),
+        email_id_validate,
         "invalid email id"
     )
     if email_id:
+        print("email id verification via otp")
+        authorize_user()
         return email_id
     
-#user_name_validation()    
+def aadhar_number_validation(id_proof):
+    if len(id_proof)==12 and id_proof.isdigit() and id_proof[0] not in ["0","1"]:
+        return True
+    else:
+        return False
+
+def proof_of_identity_input():
+    id_proof=universal_input_handler(
+        "enter your aadhar Number :",
+        aadhar_number_validation,
+        "invalid_aadhar number"
+    )
+    if id_proof:
+        return id_proof
+    else:
+        return False
+    
+def universal_live_search(data_list, prompt):
+    search_text = ""
+    while True:
+        os.system('cls' if os.name == 'nt' else 'clear')
+        print(f"{prompt}: {search_text}_")
+        filtered = [item for item in data_list if str(item).lower().startswith(search_text.lower())]
+        
+        for i, item in enumerate(filtered[:10]):
+            print(f"{'>>' if i == 0 else '  '} {item}")
+
+        char = msvcrt.getch()
+
+        try:
+            key = char.decode('utf-8')
+        except:
+            continue
+
+        if key == '\r':
+            return filtered[0] if filtered else None
+        
+        elif key == '\x08':
+            search_text = search_text[:-1]
+            
+        elif key.isalnum() or key in " -_":
+            search_text += key          
       
