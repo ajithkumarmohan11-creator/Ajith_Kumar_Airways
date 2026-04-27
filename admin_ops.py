@@ -1,8 +1,6 @@
 print("admin login")
 
 import json
-import os
-from db_engine import database_manager as dbm
 import flight_automation
 
 def authentication_admin(user_id,user_password):
@@ -22,7 +20,7 @@ def admin_operations(db,choice_for_operations,db_connect_details=None,**kwargs):
         return result["current_db"] if result else "Not selected"
 
     if choice_for_operations=="1":
-        db=dbm(**db_connect_details) 
+        db=db(**db_connect_details) 
         with open("db_connect_details.json","w") as f:
             json.dump(db_connect_details,f,indent=4)
             print(f"{db_connect_details} saved")
