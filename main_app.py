@@ -1,9 +1,13 @@
-from db_engine import database_manager as dbm
-import common_tools as common
 import json
 import os
+
+from db_engine import database_manager as dbm
 import admin_ops as admin
 import customer_ops as customer
+import common_tools as common
+
+
+
 
 if os.path.exists("db_connect_details.json"):
     with open("db_connect_details.json", "r") as f:
@@ -25,81 +29,96 @@ while True:
 
     elif choice=="1":
         mobile_number=common.authorize_mobile_number()
-        if mobile_number:
-            print(mobile_number)
-            otp=common.authorize_user()
-            if otp:
-                already_exist=customer.authentication_customer(db,mobile_number)
-                if already_exist:
-                    full_name=already_exist["full_name"]
-                    dob=already_exist["date_of_birth"]
-                    age=common.calculate_age(dob)
-                    print(f"welcome {full_name} Age :{age} ")
-                else:
-                    print("gender\n1.male\n2.female\n3.shemale(others)")
-                    gender=common.authorize_gender()
-                    if gender:
-                        user_gender=gender
-                        full_name=common.user_name_validation()
-                        if full_name:
-                            print(full_name)
-                            dob=common.dob_validation()
-                            print(dob)
-                            if dob:
-                                age=common.calculate_age(dob)
-                                print("main: ",age)
-                                #email_id=email_id_validate()
-                                details={"mobile_number":mobile_number,"full_name":full_name,"gender":user_gender,"age":age,"date_of_birth":dob}
-                                customer.customer_details(db,details)
-                    else:
-                        pass    
-                          
-                while True:
-                    print("1.check availablity\n2.Book ticket\n3.status checking\n4.cancel ticket\n5.exit")
-                    passenger_choice=(input("choice :"))
+        if not mobile_number: continue
+        otp=common.authorize_user()
+        if not otp: continue
+        already_exist=customer.authentication_customer(db,mobile_number)
+        if already_exist:
+            full_name=already_exist["full_name"]
+            dob=already_exist["date_of_birth"]
+            age=common.calculate_age(dob)
+            print(f"welcome {full_name} Age :{age} ")
+        else:
+            user_profile=customer.user_personal_details(db,mobile_number)
+            if not user_profile: continue
+            print("sing up success")
+        while True:
+                print("1.check availablity\n2.Book ticket\n3.status checking\n4.cancel ticket\n5.exit")
+                passenger_choice=(input("choice :"))
 
-                    if passenger_choice=="5":
-                        print("thank you for your visit")
-                        break 
+                if passenger_choice=="5":
+                    print("thank you for your visit")
+                    break 
 
-                    elif passenger_choice=="1":
+                elif passenger_choice=="1":
+                    origine_list = customer.get_serviceable_locations(db, "origine")
+                                
+                    if not origine_list:
+                        print("\n[!] No flights scheduled at the moment.")
+                        input("Press Enter to return...")
+                        continue
+
+                    origine = common.universal_live_search(origine_list, "Search Origin (Flying From)")
+                    if not origine: continue
+
+                    destination_list = customer.get_serviceable_locations(db, "destination", {"origine": origine})
+                                
+                    if not destination_list:
+                        print(f"\n[!] No destinations available from {origine.title()}.")
+                        input("Press Enter to return...")
+                        continue
+
+                    destination = common.universal_live_search(destination_list, f"Search Destination from {origine.title()}")
+                    if not destination: continue
+
+                    os.system('cls') 
+                    print(f"ROUTE: {origine.title()} >>> {destination.title()}")
+                    
+                    date= common.universal_input_handler(
+                        "Enter Departure Date (DD-MM-YYYY)", 
+                        common.date_is_future, 
+                        "Invalid! Please enter a future date."
+                        )
+                                
+                    if date:
+                        date=common.date_db_format(date)
                         search_values={
-                        "origine":input("origine :").strip(),
-                        "destination":input("destination :").strip(),
-                        "departure_date":"-".join(input("Departure Date (DD-MM-YYYY): ").strip().split("-")[::-1])
+                            "origine":origine,
+                            "destination":destination,
+                            "departure_date":date
                             }
                         customer.check_flight_availablity(db,**search_values)
-
-                    elif passenger_choice=="2":
-                        booking_values={
-                        "flight_id":int(input("flight id :")),
-                        "class_type":input("class (economy/premium economy,business/first class) :").strip().lower().replace(" ","_"),
-                        "no_of_seats":int(input("no of seat(s) :"))
-                                    }
-                        booking_initiat=customer.ticket_booking_manager(db)
-                        result=booking_initiat.initiate_booking(db,mobile_number,**booking_values)
-
-                    elif passenger_choice=="3":
-                        user_pnr_no=input("enter your Pnr NO to proceed status check :").strip()
-                        customer.status_checking(db,user_pnr_no) 
-
-                    elif passenger_choice=="4":
-                        user_pnr_no=input("enter your Pnr NO to proceed to cancel :").strip()
-                        refund=customer.cancel_ticket(db,user_pnr_no) 
-                        if refund:
-                            refund_amount=common.Ajith_Kumar_National_Bank.deposit_amount(refund)
-                            if refund_amount:
-                                print("refund done")
-                            else:
-                                print(f"your refund amount credited to your account within 7 to 15 working days")    
-
                     else:
-                        print("invalide choice")
-                        continue 
-            else:
-                print("user validation faild") 
-        else:
-            print("enter a valid number")                    
+                        print("Search cancelled.")
+                                
+
+
+                elif passenger_choice=="2":
+                    booking_values={
+                    "flight_id":int(input("flight id :")),
+                    "class_type":input("class (economy/premium economy,business/first class) :").strip().lower().replace(" ","_"),
+                    "no_of_seats":int(input("no of seat(s) :"))
+                    }
+                    booking_initiat=customer.ticket_booking_manager(db)
+                    result=booking_initiat.initiate_booking(db,mobile_number,**booking_values)
+
+                elif passenger_choice=="3":
+                    user_pnr_no=input("enter your Pnr NO to proceed status check :").strip()
+                    customer.status_checking(db,user_pnr_no) 
+
+                elif passenger_choice=="4":
+                    user_pnr_no=input("enter your Pnr NO to proceed to cancel :").strip()
+                    refund=customer.cancel_ticket(db,user_pnr_no) 
+                    if refund:
+                        refund_amount=common.Ajith_Kumar_National_Bank.deposit_amount(refund)
+                        if refund_amount:
+                            print("refund done")
+                        else:
+                            print(f"your refund amount credited to your account within 7 to 15 working days")    
+                else:
+                    print("enter valid choice ")
+                    break
+                                       
 
     elif choice=="2":
         user_id=input("enter your user id :").strip()
