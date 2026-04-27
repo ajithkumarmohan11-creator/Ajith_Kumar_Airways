@@ -3,9 +3,8 @@ print("customer operations ")
 # imports :
 from datetime import datetime
 import secrets
-import string
-from db_engine import database_manager 
-import common_tools
+
+import common_tools as common
 
 def authentication_customer(db,mobile_number):
     already_exist=db.read_data_from_database("customer_details",
@@ -15,7 +14,25 @@ def authentication_customer(db,mobile_number):
         return already_exist
     else:
          return False
-        
+
+def user_personal_details(db,mobile_number):        
+                gender=common.authorize_gender()
+                if  not gender: return False
+                full_name=common.user_name_validation()
+                if not full_name: return False
+                dob=common.dob_validation()
+                if not dob: return False
+                age=common.calculate_age(dob)
+                email_id=common.email_id_validate_input()
+                if not email_id : return False
+                id_number=common.proof_of_identity_input()
+                if not id_number:return False
+                print("emergency cantact details ")
+                emergency_contact=common.authorize_mobile_number()
+                details={"mobile_number":mobile_number,"full_name":full_name,"gender":gender,"age":age,"date_of_birth":dob,"email_id":email_id,"id_proof_type":"aadhar","id_number":id_number,"emergency_contact":emergency_contact}
+                customer_details(db,details)
+                return True
+                          
 def customer_details(db,details):
     db.insert_data("customer_details",**details)
 
@@ -29,8 +46,7 @@ def check_flight_availablity(db,**kwargs):
             mode="all")
         
         if not found_flight_details:
-            print(f"no flights found ")
-            return
+            return False
         
         
         all_columns=db.get_table_columns("flight_details")
@@ -104,7 +120,7 @@ class ticket_booking_manager:
         self.dbm.insert_data("ticket_booking_details",**booking_data)
     
         print(f"{kwargs["no_of_seats"]} Seat Locked! PNR: {pnr}. Please complete payment.")
-        result=common_tools.select_payment_method(total_price)
+        result=common.select_payment_method(total_price)
         if result:
             self.finalize_booking(result)
         else:
@@ -157,7 +173,7 @@ def status_checking(db,pnr):
             print(f" PNR {pnr} invalid.")  
 
 def cancel_ticket(db,pnr):
-        common_tools.authorize_user()
+        common.authorize_user()
 
         booking = db.read_data_from_database("ticket_booking_details", {"pnr_no": pnr}, mode="one")
         if not booking or booking['ticket_status'] == 'cancelled':
@@ -222,7 +238,7 @@ def auto_refresh_and_validate(db):
     all_flights = db.read_data_from_database("flight_details", mode="all")
     
     for flight in all_flights:
-        if not common_tools.valide_date_time(flight['departure_date'], flight['departure_time']):
+        if not common.valide_date_time(flight['departure_date'], flight['departure_time']):
             db.update_small_quantity_data_dictionary(
                 "flight_details", 
                 {"flight_status": "departed"}, 
@@ -237,7 +253,19 @@ def automate_flight_status(db):
     db.write_into_database(query1, [today])
 
     query2 = "UPDATE flight_details SET flight_status = 'departed' WHERE departure_date = %s AND departure_time < %s AND flight_status = 'scheduled'"
-    db.write_into_database(query2, [today, now])                
+    db.write_into_database(query2, [today, now])    
+
+def get_serviceable_locations(db, column_name, filter_dict=None):
+    result = db.read_data_from_database(
+        "flight_details", 
+        conditions_columns_values=filter_dict,
+        optional_column=f"DISTINCT {column_name}", 
+        mode="all"
+    )
+    if result:
+        return [row[column_name] for row in result]
+    return []    
+
                                              
 
 
